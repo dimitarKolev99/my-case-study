@@ -1,6 +1,7 @@
 package com.example.app;
 
 import com.example.app.dto.Station;
+import com.example.app.dto.Waggons;
 import jakarta.annotation.PostConstruct;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -33,7 +34,11 @@ public class AppApplication {
 
 
 			LOGGER.debug("Station: {}", station.getStationShortCode());
-			LOGGER.debug("Station Tracks: {}", station.getStationTracks().get(0));
+			Waggons waggons = station.getStationTracks().get(0).getStationTracks().get(0)
+					.getStationTrains().get(0).getTrain().get(0).getWaggonsList();
+//			waggons
+			LOGGER.debug("Station Tracks: {}", station.getStationTracks().get(0).getStationTracks().get(0)
+					.getStationTrains().get(0).getTrain().get(0).getWaggonsList());
 
 		} catch (JAXBException e) {
 			e.printStackTrace();
