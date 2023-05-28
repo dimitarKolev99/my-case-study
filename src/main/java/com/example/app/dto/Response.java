@@ -2,6 +2,9 @@ package com.example.app.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 public @Data class Response {
-    private String value;
+
+    private List<String> sections;
 }

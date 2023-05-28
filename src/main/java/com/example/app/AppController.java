@@ -1,8 +1,11 @@
 package com.example.app;
 
+import com.example.app.dto.WaggonIdentifier;
 import com.example.app.dto.Response;
+import jakarta.xml.bind.JAXBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,39 +13,40 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.w3c.dom.*;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 public class AppController {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(AppController.class);
 
+    @Autowired
+    AppService appService;
+
     @GetMapping("/station/{ril100}/train/{trainNumber}/waggon/{number}")
     public ResponseEntity<Response> getSections(@PathVariable("ril100") String ril100, @PathVariable("trainNumber") String trainNumber,
-                                               @PathVariable("number") String number) {
+                                               @PathVariable("number") String number) throws JAXBException {
 
-        String searchValue = "";
+//        String searchedFile = appService.getFileName(ril100);
 
-        try {
-            File xmlFile = new File("FF_2017-12-01_10-47-17.xml");
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(xmlFile);
-            doc.getDocumentElement().normalize();
 
-            searchValue = trainNumber;
-            String searchPropertyName = "trainNumber";
-            String searchPropertyValue = "2310";
+//        String searchedFile = appService.getFileName(ril100);
+//        Station station = appService.getStation(searchedFile);
+//        appService.doAsync(station);
 
-            searchXML(doc.getDocumentElement(), searchValue, searchPropertyName, searchPropertyValue);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        List<String> strings = appService.parseFileAndGetSections(searchedFile);
+
+        List<WaggonIdentifier> waggonIdentifiers = appService.getIdentfiersForStation(ril100, trainNumber, number);
+
+        List<String> res = new ArrayList<>();
+        waggonIdentifiers.forEach(identifier -> {
+            LOGGER.debug("IDENTIFIER: {}", identifier.getStringIdentifier());
+//            res.add(identifier.getWaggonIdentifier());
+        });
 
         Response response = new Response();
-        response.setValue(searchValue);
+        response.setSections(res);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
