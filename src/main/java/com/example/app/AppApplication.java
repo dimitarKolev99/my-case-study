@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
@@ -22,7 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SpringBootApplication
-public class AppApplication {
+public class AppApplication implements ApplicationListener<ApplicationReadyEvent> {
 
 	public static final Logger LOGGER = LoggerFactory.getLogger(AppApplication.class);
 
@@ -36,17 +38,15 @@ public class AppApplication {
 		SpringApplication.run(AppApplication.class, args);
 	}
 
-	@PostConstruct
-	public void run() {
-		try {
-			LOGGER.debug("IN POSTCONSTRUCT");
-
-			String searchedFile = appService.getFileName("FF");
-			Station station = appService.getStation(searchedFile);
-
-//			LOGGER.debug("STATION: {}", station.getMyTracks());
-
-			appService.doAsync(station);
+//	@PostConstruct
+//	public void run() {
+//		try {
+//			LOGGER.debug("IN POSTCONSTRUCT");
+//
+//			String searchedFile = appService.getFileName("FF");
+//			Station station = appService.getStation(searchedFile);
+//
+//			appService.doAsync(station);
 
 
 //			String prefixToCompare = "FF";
@@ -135,9 +135,35 @@ public class AppApplication {
 //			filteredWaggonsList.forEach(waggon -> LOGGER.debug("RETURNED: {}", waggon.getSections().getIdentifiers()));
 //			LOGGER.debug("list: {}", list.toString());
 
-		} catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
-	}
+//		} catch (JAXBException e) {
+//			throw new RuntimeException(e);
+//		}
+//	}
 
+	@Override
+	public void onApplicationEvent(ApplicationReadyEvent event) {
+
+		File directory = new File("Wagenreihungsplan_RawData_201712112");
+
+			if (directory.isDirectory()) {
+				File[] files = directory.listFiles();
+
+				if (files != null) {
+					for (File file : files) {
+						if (file.isFile()) {
+							String fileName = file.getName();
+
+							Station station = null;
+							try {
+								station = appService.getStation(fileName);
+							} catch (JAXBException e) {
+								throw new RuntimeException(e);
+							}
+
+							appService.doAsync(station);
+						}
+					}
+				}
+			}
+	}
 }

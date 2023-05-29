@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.w3c.dom.*;
 
+import javax.xml.xpath.XPathExpressionException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,23 +27,24 @@ public class AppController {
 
     @GetMapping("/station/{ril100}/train/{trainNumber}/waggon/{number}")
     public ResponseEntity<Response> getSections(@PathVariable("ril100") String ril100, @PathVariable("trainNumber") String trainNumber,
-                                               @PathVariable("number") String number) throws JAXBException {
-
-//        String searchedFile = appService.getFileName(ril100);
-
-
-//        String searchedFile = appService.getFileName(ril100);
-//        Station station = appService.getStation(searchedFile);
-//        appService.doAsync(station);
-
-//        List<String> strings = appService.parseFileAndGetSections(searchedFile);
+                                               @PathVariable("number") String number) throws JAXBException, XPathExpressionException {
 
         List<WaggonIdentifier> waggonIdentifiers = appService.getIdentfiersForStation(ril100, trainNumber, number);
+
+        List<String> identifiers;
+        if (waggonIdentifiers.isEmpty()) {
+            identifiers = appService.getIdentifiersXPath(ril100, trainNumber, number);
+
+            Response response = new Response();
+            response.setSections(identifiers);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
 
         List<String> res = new ArrayList<>();
         waggonIdentifiers.forEach(identifier -> {
             LOGGER.debug("IDENTIFIER: {}", identifier.getStringIdentifier());
-//            res.add(identifier.getWaggonIdentifier());
+            res.add(identifier.getStringIdentifier());
         });
 
         Response response = new Response();

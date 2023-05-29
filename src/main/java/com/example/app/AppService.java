@@ -9,7 +9,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
+import javax.xml.xpath.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +73,33 @@ public class AppService {
         JAXBContext jaxbContext = JAXBContext.newInstance(Station.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
         return (Station) jaxbUnmarshaller.unmarshal(file);
+    }
+
+    public List<String> getIdentifiersXPath(String stationShortCode, String trainNumber, String waggonNumber) throws XPathExpressionException {
+
+        List<String> res = new ArrayList<>();
+
+        String searchedFile = getFileName(stationShortCode);
+
+        InputSource xml = new InputSource("Wagenreihungsplan_RawData_201712112/" + searchedFile);
+
+        XPath xpath = XPathFactory.newInstance().newXPath();
+//        String expression = "//train[trainNumbers/trainNumber = '2310']/waggons/waggon[number = '10']/sections/identifier/text()";
+        String expression = "//train[trainNumbers/trainNumber = '" + trainNumber + "']/waggons/waggon[number = '" + waggonNumber + "']/sections/identifier/text()";
+        XPathExpression xPathExpression = xpath.compile(expression);
+
+        NodeList nodes = (NodeList) xPathExpression.evaluate(xml, XPathConstants.NODESET);
+
+        if (nodes.getLength() == 0) {
+            LOGGER.debug("NODES LENGTH: is ZERO");
+        }
+
+        for (int i = 0; i < nodes.getLength(); i++) {
+            res.add(nodes.item(i).getTextContent());
+            LOGGER.debug("NODE: " + nodes.item(i).getTextContent());
+        }
+
+        return res;
     }
 
     @Async

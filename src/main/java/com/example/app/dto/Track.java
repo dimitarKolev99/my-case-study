@@ -9,13 +9,7 @@ import lombok.Data;
 import java.util.List;
 
 @XmlRootElement
-@Table(name = "track")
-@Entity
 public @Data class Track {
-
-    @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private Long id;
 
 //    private List<Trains> stationTrains;
 //
@@ -24,8 +18,6 @@ public @Data class Track {
 //        return stationTrains;
 //    }
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "track_train_id")
     private List<Train> stationTrains;
 
     @XmlElementWrapper(name = "trains")

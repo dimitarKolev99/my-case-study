@@ -7,7 +7,9 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Data;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @XmlRootElement(name = "station")
 @Table(name = "station")
@@ -36,8 +38,6 @@ public @Data class Station {
         return stationShortCode;
     }
 
-    @Transient
-    private List<Train> holderList;
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "station_train_id")
@@ -47,17 +47,26 @@ public @Data class Station {
     public void setTheTrains() {
 
         if (myTracks != null && !myTracks.isEmpty()) {
-            this.holderList = new ArrayList<>();
+
+            List<Train> holderList = new ArrayList<>();
             this.trainList = new ArrayList<>();
+
+            Set<String> trainNumbers = new HashSet<>();
+
             this.myTracks.forEach(track -> {
                 List<Train> trainList1 = track.getStationTrains();
-                this.holderList.addAll(trainList1);
+                holderList.addAll(trainList1);
             });
 
-            this.holderList.forEach(train -> {
-                train.setStation(this);
-                this.trainList.add(train);
+            holderList.forEach(train -> {
+                if (!train.getTrainNumberXml().isEmpty()
+                && !trainNumbers.contains(train.getTrainNumberXml().get(0))) {
+                    train.setStation(this);
+                    this.trainList.add(train);
+                    trainNumbers.add(train.getTrainNumberXml().get(0));
+                }
             });
+
         }
     }
 
