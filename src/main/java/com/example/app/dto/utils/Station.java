@@ -1,4 +1,4 @@
-package com.example.app.dto;
+package com.example.app.dto.utils;
 
 import jakarta.persistence.*;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -20,8 +20,6 @@ public @Data class Station {
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Long id;
 
-//    @OneToMany(cascade = CascadeType.ALL)
-//    @JoinColumn(name = "station_track_id")
     @Transient
     private List<Track> myTracks;
 
@@ -70,12 +68,5 @@ public @Data class Station {
         }
     }
 
-
-    //    private List<Tracks> stationTracks;
-
-//    @XmlElement(name = "tracks")
-//    public List<Tracks> getStationTracks() {
-//        return stationTracks;
-//    }
 }
 

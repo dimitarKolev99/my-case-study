@@ -1,6 +1,6 @@
 package com.example.app;
 
-import com.example.app.dto.Station;
+import com.example.app.dto.utils.Station;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

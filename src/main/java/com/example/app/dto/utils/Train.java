@@ -1,4 +1,4 @@
-package com.example.app.dto;
+package com.example.app.dto.utils;
 
 import jakarta.persistence.*;
 import jakarta.xml.bind.annotation.*;
@@ -16,13 +16,6 @@ public @Data class Train {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Long id;
-
-//    @OneToOne(cascade = CascadeType.ALL)
-//    @JoinColumn(name = "id")
-//    private TrainNumbers trainNumbers;
-
-
-    //    @XmlElementWrapper(name = "trainNumbers")
     @Transient
     private List<String> trainNumberXml = new ArrayList<>();
 
@@ -55,7 +48,6 @@ public @Data class Train {
     @PrePersist
     public void setTheWaggonsTrain() {
 
-
         if (this.trainNumberXml != null && !this.trainNumberXml.isEmpty()) {
             this.trainNumberToSave = this.trainNumberXml.get(0);
         }
@@ -70,20 +62,5 @@ public @Data class Train {
             });
         }
     }
-
-//    private List<Waggons> waggonsList;
-
-//    @XmlElement(name = "trainNumbers")
-//    public TrainNumbers getTrainNumbers() {
-//        return trainNumbers;
-//    }
-
-//    private Waggons waggonsList;
-//
-//    @XmlElement(name = "waggons")
-//    public Waggons getWaggonsList() {
-//        return waggonsList;
-//    }
-
 
 }

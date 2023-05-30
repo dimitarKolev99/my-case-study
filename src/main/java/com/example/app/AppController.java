@@ -1,21 +1,14 @@
 package com.example.app;
 
-import com.example.app.dto.WaggonIdentifier;
-import com.example.app.dto.Response;
-import jakarta.xml.bind.JAXBException;
+import com.example.app.dto.response.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.w3c.dom.*;
-
-import javax.xml.xpath.XPathExpressionException;
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 public class AppController {
@@ -27,30 +20,8 @@ public class AppController {
 
     @GetMapping("/station/{ril100}/train/{trainNumber}/waggon/{number}")
     public ResponseEntity<Response> getSections(@PathVariable("ril100") String ril100, @PathVariable("trainNumber") String trainNumber,
-                                               @PathVariable("number") String number) throws JAXBException, XPathExpressionException {
-
-        List<WaggonIdentifier> waggonIdentifiers = appService.getIdentfiersForStation(ril100, trainNumber, number);
-
-        List<String> identifiers;
-        if (waggonIdentifiers.isEmpty()) {
-            identifiers = appService.getIdentifiersXPath(ril100, trainNumber, number);
-
-            Response response = new Response();
-            response.setSections(identifiers);
-
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-
-        List<String> res = new ArrayList<>();
-        waggonIdentifiers.forEach(identifier -> {
-            LOGGER.debug("IDENTIFIER: {}", identifier.getStringIdentifier());
-            res.add(identifier.getStringIdentifier());
-        });
-
-        Response response = new Response();
-        response.setSections(res);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
+                                               @PathVariable("number") String number) throws Exception {
+        return appService.getSections(ril100, trainNumber, number);
     }
 
     private static void searchXML(Node node, String searchValue, String searchPropertyName, String searchPropertyValue) {

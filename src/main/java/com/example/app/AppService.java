@@ -1,22 +1,23 @@
 package com.example.app;
 
-import com.example.app.dto.*;
+import com.example.app.dto.response.Response;
+import com.example.app.dto.utils.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import javax.xml.xpath.*;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 @Service
@@ -28,42 +29,32 @@ public class AppService {
     private EntityService entityService;
 
     @Autowired
-    private IdentifierRepository identifierRepository;
+    private SectionsRepository sectionsRepository;
 
     public String getFileName(String prefixToCompare) {
-//        String prefixToCompare = "FF";
 
         File directory = new File("Wagenreihungsplan_RawData_201712112");
 
         String searchedFile = "";
-        // Check if the specified path is a directory
         if (directory.isDirectory()) {
-            // Get all files in the directory
             File[] files = directory.listFiles();
 
-            // Iterate through the files
             if (files != null) {
                 for (File file : files) {
                     if (file.isFile()) {
-                        // Get the file name
                         String fileName = file.getName();
 
-                        // Cut the string from the beginning to the first "_"
                         int underscoreIndex = fileName.indexOf('_');
                         if (underscoreIndex != -1) {
                             String prefix = fileName.substring(0, underscoreIndex);
 
-                            // Compare with the given string
                             if (prefix.equals(prefixToCompare)) {
                                 searchedFile = fileName;
-                                System.out.println("File name: " + fileName);
                             }
                         }
                     }
                 }
             }
-        } else {
-            System.out.println("Invalid directory path.");
         }
         return searchedFile;
     }
@@ -75,17 +66,20 @@ public class AppService {
         return (Station) jaxbUnmarshaller.unmarshal(file);
     }
 
-    public List<String> getIdentifiersXPath(String stationShortCode, String trainNumber, String waggonNumber) throws XPathExpressionException {
+    public Set<String> getIdentifiersXPath(String stationShortCode, String trainNumber, String waggonNumber) throws XPathExpressionException {
 
-        List<String> res = new ArrayList<>();
+        Set<String> res = new HashSet<>();
 
         String searchedFile = getFileName(stationShortCode);
 
         InputSource xml = new InputSource("Wagenreihungsplan_RawData_201712112/" + searchedFile);
 
         XPath xpath = XPathFactory.newInstance().newXPath();
-//        String expression = "//train[trainNumbers/trainNumber = '2310']/waggons/waggon[number = '10']/sections/identifier/text()";
-        String expression = "//train[trainNumbers/trainNumber = '" + trainNumber + "']/waggons/waggon[number = '" + waggonNumber + "']/sections/identifier/text()";
+        String expression = "(//train[trainNumbers/trainNumber = '" + trainNumber + "'])[1]/waggons/waggon[number = '" + waggonNumber + "']/sections/identifier/text()";
+
+//        String expression = "/station[shortcode='" + stationShortCode + "']/tracks/track/trains/train[trainNumbers/trainNumber='" + trainNumber + "'][1]" +
+//                "/waggons/waggon[number='" + waggonNumber + "']/sections/identifier/text()";
+
         XPathExpression xPathExpression = xpath.compile(expression);
 
         NodeList nodes = (NodeList) xPathExpression.evaluate(xml, XPathConstants.NODESET);
@@ -95,20 +89,25 @@ public class AppService {
         }
 
         for (int i = 0; i < nodes.getLength(); i++) {
+
+            Node singleNode = nodes.item(i);
+            singleNode.getParentNode().removeChild(singleNode);
+
             res.add(nodes.item(i).getTextContent());
+
             LOGGER.debug("NODE: " + nodes.item(i).getTextContent());
         }
 
         return res;
     }
 
-    @Async
     public void doAsync(Station station) {
         entityService.doHeavy(station);
     }
 
-    public List<WaggonIdentifier> getIdentfiersForStation(String stationShortCode, String trainNumber, String waggonNumber) {
-        return identifierRepository.findAllByWaggon_Train_Station_StationShortCodeAndWaggon_Train_TrainNumberToSaveAndWaggon_WaggonNumber(stationShortCode,
+
+    public List<Section> getSectionsFromRepository(String stationShortCode, String trainNumber, String waggonNumber) {
+        return sectionsRepository.findAllByWaggon_Train_Station_StationShortCodeAndWaggon_Train_TrainNumberToSaveAndWaggon_WaggonNumber(stationShortCode,
                 trainNumber, waggonNumber);
 
     }
@@ -150,6 +149,32 @@ public class AppService {
 
 
         return sections;
+    }
+
+    public ResponseEntity<Response> getSections(String ril100, String trainNumber, String number) throws XPathExpressionException {
+
+        List<Section> waggonSections = getSectionsFromRepository(ril100, trainNumber, number);
+
+        if (waggonSections.isEmpty()) {
+            Set<String> identifiers = getIdentifiersXPath(ril100, trainNumber, number);
+
+            Response response = new Response();
+            response.setSections(identifiers);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
+        Set<String> sections = new HashSet<>();
+
+        waggonSections.forEach(identifier -> {
+            LOGGER.debug("IDENTIFIER: {}", identifier.getSectionString());
+            sections.add(identifier.getSectionString());
+        });
+
+        Response response = new Response();
+        response.setSections(sections);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
 

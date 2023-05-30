@@ -1,27 +1,23 @@
-package com.example.app.dto;
+package com.example.app.dto.utils;
 
 import jakarta.persistence.*;
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlElement;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-@Table(name = "identifier")
+@Table(name = "section")
 @Entity
-public class WaggonIdentifier {
+public class Section {
 
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
-    @Column(name = "identifier_id")
+    @Column(name = "section_id")
     @Getter
     @Setter
     private Long id;
 
     @Getter
     @Setter
-    private String stringIdentifier;
+    private String sectionString;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "waggon_id")
