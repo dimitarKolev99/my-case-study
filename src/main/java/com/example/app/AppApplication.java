@@ -9,10 +9,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.io.File;
 
 @SpringBootApplication
+@EnableAsync
 public class AppApplication implements ApplicationListener<ApplicationReadyEvent> {
 
 	public static final Logger LOGGER = LoggerFactory.getLogger(AppApplication.class);
@@ -130,6 +133,7 @@ public class AppApplication implements ApplicationListener<ApplicationReadyEvent
 //	}
 
 	@Override
+	@Async
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 
 		File directory = new File("Wagenreihungsplan_RawData_201712112");

@@ -19,43 +19,9 @@ public class AppController {
     AppService appService;
 
     @GetMapping("/station/{ril100}/train/{trainNumber}/waggon/{number}")
-    public ResponseEntity<Response> getSections(@PathVariable("ril100") String ril100, @PathVariable("trainNumber") String trainNumber,
+    public Response getSections(@PathVariable("ril100") String ril100, @PathVariable("trainNumber") String trainNumber,
                                                @PathVariable("number") String number) throws Exception {
-        return appService.getSections(ril100, trainNumber, number);
-    }
-
-    private static void searchXML(Node node, String searchValue, String searchPropertyName, String searchPropertyValue) {
-        if (node.getNodeType() == Node.ELEMENT_NODE) {
-            Element element = (Element) node;
-            String elementValue = element.getTextContent();
-
-            NamedNodeMap attributes = element.getAttributes();
-//            if (elementValue.equals(searchValue) && hasAttribute(attributes, searchPropertyName, searchPropertyValue)) {
-//                System.out.println("Match found: " + elementValue);
-//                // Additional logic for handling the match
-//            }
-            if (elementValue.equals(searchValue)) {
-
-                System.out.println("Match found: " + elementValue + element.getTagName());
-
-                // Additional logic for handling the match
-            }
-        }
-
-        NodeList children = node.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node child = children.item(i);
-            searchXML(child, searchValue, searchPropertyName, searchPropertyValue); // Recursive call to search nested nodes
-        }
-    }
-
-    private static boolean hasAttribute(NamedNodeMap attributes, String propertyName, String propertyValue) {
-        if (attributes != null) {
-            Node propertyNode = attributes.getNamedItem(propertyName);
-            if (propertyNode != null && propertyNode.getNodeValue().equals(propertyValue)) {
-                return true;
-            }
-        }
-        return false;
+//        return appService.getSections(ril100, trainNumber, number);
+        return appService.getIdentifiersStax(ril100, trainNumber, number);
     }
 }
