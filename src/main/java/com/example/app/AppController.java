@@ -21,7 +21,7 @@ public class AppController {
     @GetMapping("/station/{ril100}/train/{trainNumber}/waggon/{number}")
     public Response getSections(@PathVariable("ril100") String ril100, @PathVariable("trainNumber") String trainNumber,
                                                @PathVariable("number") String number) throws Exception {
-//        return appService.getSections(ril100, trainNumber, number);
-        return appService.getIdentifiersStax(ril100, trainNumber, number);
+        return appService.getSections(ril100, trainNumber, number);
+//        return appService.getIdentifiersStax(ril100, trainNumber, number);
     }
 }

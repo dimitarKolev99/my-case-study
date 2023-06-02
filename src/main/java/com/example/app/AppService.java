@@ -34,10 +34,10 @@ public class AppService {
     private static final Logger LOGGER = LoggerFactory.getLogger(AppApplication.class);
 
     @Autowired
-    private EntityService entityService;
+    private SectionsRepository sectionsRepository;
 
     @Autowired
-    private SectionsRepository sectionsRepository;
+    private StationRepository stationRepository;
 
     public String getFileName(String prefixToCompare) {
 
@@ -109,7 +109,7 @@ public class AppService {
         return res;
     }
 
-    public Response getIdentifiersStax(String stationShortCode, String trainNumber, String waggonNumber) throws IOException {
+    public Set<String> getIdentifiersStax(String stationShortCode, String trainNumber, String waggonNumber) throws IOException {
 
         String searchedFile = getFileName(stationShortCode);
 
@@ -129,8 +129,6 @@ public class AppService {
             String currentTrainNumber = null;
             String currentWaggonNumber = null;
 
-            Set<String> finalSections = new HashSet<>();
-
             while (reader.hasNext()) {
                 XMLEvent event = reader.nextEvent();
 
@@ -145,7 +143,6 @@ public class AppService {
                             if (trainNumberValue.equals(trainNumber)) {
                                 currentTrainNumber = trainNumberValue;
                                 isMatchingTrain = true;
-                                System.out.println("HERE");
                             }
                         }
                     } else if (found) {
@@ -169,9 +166,6 @@ public class AppService {
                                                 sections.add(section);
                                             }
                                         } else if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("sections")) {
-                                            // Process sections for the matching waggon
-//                                            found = true;
-                                            System.out.println("HERE: " + sections);
                                             break;
                                         }
                                     }
@@ -183,8 +177,7 @@ public class AppService {
                                         if (currentWaggonNumber.equals(waggonNumber)) {
                                             isMatchingWaggon = true;
                                             found = true;
-                                            System.out.println("THIS: " + sections);
-                                            break;  // Break out of the inner loop
+                                            break;
                                         } else {
                                             sections.clear();
                                         }
@@ -212,13 +205,11 @@ public class AppService {
 
                     if (elementName.equals("train")) {
                         if (isMatchingTrain && currentTrainNumber.equals(trainNumber)) {
-                            // Process the sections for the matching train and waggon
                             for (String section : sections) {
-                                System.out.println("Section: " + section);
+                                System.out.println("Current Section: " + section);
                             }
                         }
 
-                        // Reset variables for the next train
                         isMatchingTrain = false;
                         isMatchingWaggon = false;
                         currentTrainNumber = null;
@@ -228,144 +219,24 @@ public class AppService {
                 }
             }
 
-//            while (reader.hasNext()) {
-//                XMLEvent event = reader.nextEvent();
-//
-//                if (event.isStartElement()) {
-//                    StartElement startElement = event.asStartElement();
-//                    String elementName = startElement.getName().getLocalPart();
-//
-//                    if (elementName.equals("trainNumber")) {
-//                        event = reader.nextEvent();
-//                        if (event.isCharacters()) {
-//                            String trainNumberValue = event.asCharacters().getData();
-//                            if (trainNumberValue.equals(trainNumber)) {
-//                                currentTrainNumber = trainNumberValue;
-//                                isMatchingTrain = true;
-//                                System.out.println("HERE");
-//                            }
-//                        }
-//                    } else if (found) {
-//                        break;
-//                    } else if (isMatchingTrain && elementName.equals("waggon")) {
-//                        while (reader.hasNext()) {
-//                            event = reader.nextEvent();
-//
-//                            if (event.isStartElement()) {
-//                                StartElement innerStartElement = event.asStartElement();
-//                                String innerElementName = innerStartElement.getName().getLocalPart();
-//
-//                                if (innerElementName.equals("sections")) {
-//                                    while (reader.hasNext()) {
-//                                        event = reader.nextEvent();
-//                                        if (event.isStartElement() && event.asStartElement().getName().getLocalPart().equals("identifier")) {
-//                                            event = reader.nextEvent();
-//                                            if (event.isCharacters()) {
-//                                                String section = event.asCharacters().getData();
-////                                                System.out.println("SECTION " + section);
-//                                                sections.add(section);
-//                                            }
-//                                        }
-//                                    }
-//                                } else if (innerElementName.equals("number")) {
-//                                    event = reader.nextEvent();
-//                                    if (event.isCharacters()) {
-//                                        currentWaggonNumber = event.asCharacters().getData();
-//                                        if (currentWaggonNumber.equals(waggonNumber)) {
-//                                            isMatchingWaggon = true;
-//                                            found = true;
-//                                            System.out.println("THIS: " + sections);
-//                                        } else {
-//                                            sections.clear();
-//                                        }
-//                                    }
-//                                }
-////                                else if (isMatchingWaggon && innerElementName.equals("sections")) {
-////                                    while (reader.hasNext()) {
-////                                        event = reader.nextEvent();
-////                                        if (event.isStartElement() && event.asStartElement().getName().getLocalPart().equals("identifier")) {
-////                                                event = reader.nextEvent();
-////                                                if (event.isCharacters()) {
-////                                                    String section = event.asCharacters().getData();
-////                                                    System.out.println("SECTION " + section);
-////                                                    sections.add(section);
-////                                                }
-////                                        } else if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("sections")) {
-////                                            found = true;
-////                                            System.out.println("HERE" + sections);
-////                                            break;
-////                                        }
-////                                    }
-////                                }
-//                            } else if (isMatchingWaggon && event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("waggon")) {
-//                                break;
-//                            } else if (event.isEndElement()) {
-//                                EndElement endElement = event.asEndElement();
-//                                String endElementName = endElement.getName().getLocalPart();
-//                                if (endElementName.equals("waggon")) {
-//                                    if (isMatchingWaggon) {
-//                                        break;
-//                                    } else {
-//                                        currentWaggonNumber = null;
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                } else if (isMatchingTrain && event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("train")) {
-//                    break;
-//                } else if (event.isEndElement()) {
-//                    EndElement endElement = event.asEndElement();
-//                    String elementName = endElement.getName().getLocalPart();
-//
-//                    if (elementName.equals("train")) {
-//                        if (isMatchingTrain && currentTrainNumber.equals(trainNumber)) {
-//                            // Process the sections for the matching train and waggon
-//                            for (String section : sections) {
-//                                System.out.println("Section: " + section);
-//                            }
-//                        }
-//
-//                        // Reset variables for the next train
-//                        isMatchingTrain = false;
-//                        isMatchingWaggon = false;
-//                        currentTrainNumber = null;
-//                        currentWaggonNumber = null;
-//                        sections.clear();
-//                    }
-//                }
-//            }
-
         } catch (XMLStreamException e) {
             throw new RuntimeException(e);
         }
 
-        for (String section : sections) {
-            System.out.println("Section: " + section);
-        }
+//        Response response = new Response();
+//        response.setSections(sections);
 
-        Response response = new Response();
-        response.setSections(sections);
-
-        return response;
+        return sections;
     }
-
-
-
-
-
-
-
-    public void doAsync(Station station) {
-        entityService.doHeavy(station);
-    }
-
 
     public List<Section> getSectionsFromRepository(String stationShortCode, String trainNumber, String waggonNumber) {
         return sectionsRepository.findAllByWaggon_Train_Station_StationShortCodeAndWaggon_Train_TrainNumberToSaveAndWaggon_WaggonNumber(stationShortCode,
                 trainNumber, waggonNumber);
 
+    }
+
+    public void saveStation(Station station) {
+        stationRepository.save(station);
     }
 
     public List<String> parseFileAndGetSections(String searchedFile) throws JAXBException {
@@ -400,37 +271,30 @@ public class AppService {
 
         List<String> sections = new ArrayList<>();
 
-//        filteredWaggonsList.forEach(waggon -> LOGGER.debug("RETURNED: {}", sections.addAll(waggon.getSections().getIdentifiers())));
-//			LOGGER.debug("list: {}", list.toString());
-
-
         return sections;
     }
 
-    public ResponseEntity<Response> getSections(String ril100, String trainNumber, String number) throws XPathExpressionException {
+    public Response getSections(String ril100, String trainNumber, String number) throws IOException {
 
-//        List<Section> waggonSections = getSectionsFromRepository(ril100, trainNumber, number);
+        Response response = new Response();
 
-//        if (waggonSections.isEmpty()) {
-            Set<String> identifiers = getIdentifiersXPath(ril100, trainNumber, number);
+        List<Section> waggonSections = getSectionsFromRepository(ril100, trainNumber, number);
 
-            Response response = new Response();
+        if (waggonSections.isEmpty()) {
+            Set<String> identifiers = getIdentifiersStax(ril100, trainNumber, number);
             response.setSections(identifiers);
 
-//            return new ResponseEntity<>(response, HttpStatus.OK);
-//        }
+            return response;
+        }
 
-//        Set<String> sections = new HashSet<>();
+        Set<String> sectionSet = new HashSet<>();
 
-//        waggonSections.forEach(identifier -> {
-//            LOGGER.debug("IDENTIFIER: {}", identifier.getSectionString());
-//            sections.add(identifier.getSectionString());
-//        });
-//
-//        Response response = new Response();
-//        response.setSections(sections);
+        waggonSections.forEach(identifier -> {
+            sectionSet.add(identifier.getSectionString());
+        });
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        response.setSections(sectionSet);
+        return response;
     }
 }
 
