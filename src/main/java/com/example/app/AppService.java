@@ -183,18 +183,6 @@ public class AppService {
                                         }
                                     }
                                 }
-                            } else if (isMatchingWaggon && event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("waggon")) {
-                                break;
-                            } else if (event.isEndElement()) {
-                                EndElement endElement = event.asEndElement();
-                                String endElementName = endElement.getName().getLocalPart();
-                                if (endElementName.equals("waggon")) {
-                                    if (isMatchingWaggon) {
-                                        break;
-                                    } else {
-                                        currentWaggonNumber = null;
-                                    }
-                                }
                             }
                         }
                     }
